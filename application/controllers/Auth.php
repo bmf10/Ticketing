@@ -9,6 +9,11 @@ class Auth extends CI_Controller
 		parent::__construct();
 	}
 
+	public function index()
+	{
+		//view code here
+	}
+
 	public function register()
 	{
 
@@ -37,7 +42,7 @@ class Auth extends CI_Controller
 				$id = $this->db->insert_id();
 				$this->verification($id, $data['email']);
 			} catch (Exception $e) {
-				response('errors', $e, 422);
+				response('errors', $e->getMessage(), 422);
 			}
 		}
 	}
@@ -68,7 +73,7 @@ class Auth extends CI_Controller
 			echo $this->email->print_debugger();
 			response('success', ['account_created' => true, 'email_sent' => $sent], 200);
 		} catch (Exception $e) {
-			response('errors', $e, 422);
+			response('errors', $e->getMessage(), 422);
 		}
 	}
 
@@ -99,10 +104,10 @@ class Auth extends CI_Controller
 				$this->email->to($email);
 				$this->email->subject("Reset Password");
 				$this->email->message("Klik link untuk reset password anda, <a href='" . site_url('auth/reset/?s=' . $encrypt . '&p=' . $new_password) . "'>Klik Disini</a>");
-				$this->email->send();
-				response('success', ['email_sent' => true], 200);
+				$email_sent = $this->email->send();
+				response('success', ['email_sent' => $email_sent], 200);
 			} catch (Exception $e) {
-				response('errors', $e, 422);
+				response('errors', $e->getMessage(), 422);
 			}
 		} else {
 			response('errors', ['error' => 'email is not found'], 404);
@@ -122,7 +127,7 @@ class Auth extends CI_Controller
 					$this->db->update('users', ['password' => password_hash($new_password, PASSWORD_DEFAULT)], ['email' => $email]);
 					response('success', ['email' => $email, 'new_password' => $new_password], 200);
 				} catch (Exception $e) {
-					response('errors', $e, 422);
+					response('errors', $e->getMessage(), 422);
 				}
 			} else {
 				response('errors', ['error' => 'reset code is not valid'], 422);
@@ -140,7 +145,7 @@ class Auth extends CI_Controller
 				$this->db->update('users', ['is_verified' => 1], ['id' => $id]);
 				response('success', ['id' => $id, 'is_verified' => true], 200);
 			} catch (Exception $e) {
-				response('errors', ['error' => 'reset code is not valid'], 422);
+				response('errors', $e->getMessage(), 422);
 			}
 		} else {
 			response('errors', ['error' => 'reset code is not found'], 404);
@@ -171,7 +176,7 @@ class Auth extends CI_Controller
 				}
 			}
 		} catch (Exception $e) {
-			response('errors', $e, 422);
+			response('errors', $e->getMessage(), 422);
 		}
 	}
 }
