@@ -23,7 +23,7 @@
 									<div class="form-group">
 										<label for="exampleFormControlSelect1">Gender</label>
 										<select class="form-control" name="gender" required id="exampleFormControlSelect1">
-											<option>Gender</option>
+											<option value="">Gender</option>
 											<option value="Male">Male</option>
 											<option value="Female">Female</option>
 										</select>
@@ -32,9 +32,9 @@
 										<label>Address</label>
 										<textarea class="form-control" name="address" required placeholder="Enter address" rows="3"></textarea>
 									</div>
-									<div class="form-group">
+									<div class="form-group" id="phone_group">
 										<label>Phone</label>
-										<input type="tel" pattern="^\d{10}$|^\d{11}$|^\d{12}$|^\d{13}$" class="form-control" name="phone" required placeholder="Enter phone">
+										<input type="tel" id="phone" pattern="^\d{10}$|^\d{11}$|^\d{12}$|^\d{13}$" class="form-control" name="phone" required placeholder="Enter phone">
 									</div>
 									<div class="form-group" id="email_group">
 										<label>Email address</label>
@@ -44,7 +44,7 @@
 										<label>Password</label>
 										<input type="password" class="form-control" name="password" required placeholder="Password">
 									</div>
-									<button type="submit" class="btn btn-secondary my-2">Submit</button>
+									<button type="submit" id="register_submit" class="btn btn-secondary my-2">Submit</button>
 								</form>
 							</div>
 						</div>
@@ -73,6 +73,30 @@
 		</div>
 	</div>
 </section>
+
+<div class="modal fade" id="verification" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-sm">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="exampleModalLongTitle">Verification Phone</h5>
+			</div>
+			<div style="margin: 20px">
+				<form id="verification_form" action="<?= base_url('auth/verification') ?>">
+					<div class="form-group">
+						<label>Your phone number</label>
+						<input type="text" name="phone" id="phone_verification" readonly class="form-control">
+					</div>
+					<div class="form-group">
+						<label>Code from sms</label>
+						<input type="text" required name="code" class="form-control">
+					</div>
+					<button type="submit" class="btn btn-primary">Done</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
 <script>
 	$(document).ready(() => {
@@ -107,6 +131,9 @@
 				success: response => {
 					let responseData = response.responseJSON
 					toastr.success('Redirecting...')
+					setTimeout(() => {
+						window.location.href = "<?= $this->session->userdata('current_url') ? $this->session->userdata('current_url') : base_url('profile') ?>"
+					}, 2000)
 				},
 				error: error => {
 					let errorData = error.responseJSON
@@ -120,8 +147,19 @@
 			$('#email_invalid').remove()
 		})
 
+		$('#phone').focusin(() => {
+			$('#phone').removeClass('is-invalid')
+			$('#phone_invalid').remove()
+		})
+
 		$('#register').submit((e) => {
 			e.preventDefault()
+
+			let loading = "<div id='loading' class='spinner-border text-light spinner-border-sm' role='status'/>"
+			$('#register_submit').empty()
+			$('#register_submit').append(loading)
+			$('#register_submit').attr('disabled', true)
+
 			let value = $('#register').serialize()
 			let url = $('#register').attr('action')
 
@@ -129,18 +167,56 @@
 				url: url,
 				data: value,
 				success: response => {
-					let responseData = response.responseJSON
-					toastr.success('Check Your Email')
+					$('#loading').remove()
+					$('#register_submit').append('Submit')
+					$('#register_submit').attr('disabled', false)
+					$('#register').trigger("reset")
+					let responseData = response.data
+					toastr.success('Register Successfull')
+					$('#phone_verification').val(responseData.phone)
+					$('#verification').modal('show')
+				},
+				error: error => {
+					$('#loading').remove()
+					$('#register_submit').append('Submit')
+					$('#register_submit').attr('disabled', false)
+					let errorData = error.responseJSON
+					console.log(errorData)
+					if (errorData.data && errorData.data.email) {
+						let html = "<div id='phone_invalid' class='invalid-feedback'>Email Already Use</div>"
+						$('#email').addClass('is-invalid')
+						$('#email_group').append(html)
+					}
+					if (errorData.data && errorData.data.phone) {
+						let html = "<div id='email_invalid' class='invalid-feedback'>Phone Already Use</div>"
+						$('#phone').addClass('is-invalid')
+						$('#phone_group').append(html)
+					}
+					if (errorData.data == '[HTTP 400] Unable to create record: The number  is unverified. Trial accounts cannot send messages to unverified numbers; verify  at twilio.com/user/account/phone-numbers/verified, or purchase a Twilio number to send messages to unverified numbers.') {
+						toastr.success('Register Successfull')
+						toastr.warning('Verification Undeliverable, please login and change your number with other number')
+						$('#register').trigger("reset")
+					}
+				}
+			})
+		})
+
+		$('#verification_form').submit((e) => {
+			e.preventDefault()
+			let value = $('#verification_form').serialize()
+			let url = $('#verification_form').attr('action')
+
+			$.post({
+				url: url,
+				data: value,
+				success: response => {
+					$('#verification_form').trigger("reset")
+					toastr.success('Verification Success')
+					$('#verification').modal('hide')
 				},
 				error: error => {
 					let errorData = error.responseJSON
-					if (errorData.data && errorData.data.email) {
-						let html = "<div id='email_invalid' class='invalid-feedback'>Email Already Used</div>"
-						$('#email').addClass('is-invalid')
-						$('#email_group').append(html)
-					} else {
-						toastr.error(errorData.data.error)
-					}
+					toastr.error(errorData.data.error)
 				}
 			})
 		})

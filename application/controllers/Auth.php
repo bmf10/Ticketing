@@ -1,12 +1,15 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
+use Twilio\Rest\Client;
+
 class Auth extends CI_Controller
 {
 
 	function __construct()
 	{
 		parent::__construct();
+		is_logged_in(true);
 	}
 
 	public function index()
@@ -16,11 +19,10 @@ class Auth extends CI_Controller
 
 	public function register()
 	{
-
 		$this->form_validation->set_rules('name', 'Name', 'required|trim');
 		$this->form_validation->set_rules('gender', 'Gender', 'required|trim');
 		$this->form_validation->set_rules('address', 'address', 'required|trim');
-		$this->form_validation->set_rules('phone', 'Phone', 'required|trim');
+		$this->form_validation->set_rules('phone', 'Phone', 'required|trim|is_unique[users.phone]');
 		$this->form_validation->set_rules('email', 'Email', 'required|valid_email|trim|is_unique[users.email]');
 		$this->form_validation->set_rules('password', 'Password', 'required|trim|min_length[6]');
 
@@ -28,127 +30,61 @@ class Auth extends CI_Controller
 			response('errors', $this->form_validation->error_array(), 422);
 		} else {
 			$password = $this->input->post('password');
-			$data = [
-				'name' => $this->input->post('name'),
-				'gender' => $this->input->post('gender'),
-				'address' => $this->input->post('address'),
-				'phone' => $this->input->post('phone'),
-				'email' => $this->input->post('email'),
-				'password' => password_hash($password, PASSWORD_DEFAULT),
-				'role' => 1
-			];
+			$data = $this->input->post();
+			$data['password'] = password_hash($password, PASSWORD_DEFAULT);
+			$data['code'] = substr(str_shuffle('0123456789'), 1, 6);
+			$data['role'] = 1;
+
 			try {
 				$this->db->insert('users', $data);
-				$id = $this->db->insert_id();
-				$this->verification($id, $data['email']);
+				$this->db->insert_id();
+				$this->sendCode($data['phone'], 'register', $data['code']);
+				response('success', ['account_created' => true, 'phone' => $data['phone']], 200);
 			} catch (Exception $e) {
 				response('errors', $e->getMessage(), 422);
 			}
 		}
 	}
 
-	public function verification($id, $email)
+	public function sendCode($phone, $codition, $code)
 	{
-		$encrypt = encrypt_url($id);
+		$account_sid = 'ACa419bc41f40a1008df27d0b1fa2a61b7';
+		$auth_token = '5bd38d039daf72b622c90caab40b5d27';
+		$twilio_number = "+12073674889";
+		$phone_with_code = '+62' . substr($phone, 1);
+		$client = new Client($account_sid, $auth_token);
 
-		$config = [
-			'protocol' => 'smtp',
-			'smtp_host' => 'smtp.hostinger.co.id',
-			'smtp_port' => '587',
-			'smtp_user' => 'example@siderajati.com',
-			'smtp_pass' => '12345678',
-			'mailtype' => 'html',
-			'charset' => 'utf-8',
-			'wordwrap' => TRUE,
-			'priority' => 1
-		];
-
-		try {
-			$this->email->initialize($config);
-			$this->email->from('example@siderajati.com', 'noreply');
-			$this->email->to($email);
-			$this->email->subject("Verifikasi akun");
-			$this->email->message("Klik link untuk verifikasi akun anda, <a href='" . site_url('auth/verify/?s=' . $encrypt) . "'>Klik Disini</a>");
-			$sent = $this->email->send();
-			echo $this->email->print_debugger();
-			response('success', ['account_created' => true, 'email_sent' => $sent], 200);
-		} catch (Exception $e) {
-			response('errors', $e->getMessage(), 422);
+		if ($codition === 'register') {
+			$client->messages->create($phone_with_code, [
+				'from' => $twilio_number,
+				'body' => 'Terima kasih telah mendaftar di SIMPETUK, kode verifikasi akun anda yaitu ' . $code . '. Silahkan masukan pada form yang muncul di layar anda. :)'
+			]);
 		}
 	}
 
-	public function reset_password()
+	public function verification()
 	{
-		$email = $this->input->post('email');
+		$phone = $this->input->post('phone');
+		$code = $this->input->post('code');
+		$user = $this->db->get_where('users', ['phone' => $phone])->row();
 
-		if ($this->db->get_where('users', ['email' => $email])->num_rows() > 0) {
-			$encrypt = encrypt_url($email);
-			$permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-			$new_password = encrypt_url(substr(str_shuffle($permitted_chars), 0, 16));
-
-			$config = [
-				'protocol' => 'smtp',
-				'smtp_host' => 'smtp.hostinger.co.id',
-				'smtp_port' => '587',
-				'smtp_user' => 'example@siderajati.com',
-				'smtp_pass' => '12345678',
-				'mailtype' => 'html',
-				'charset' => 'utf-8',
-				'wordwrap' => TRUE,
-				'priority' => 1
-			];
-
-			try {
-				$this->email->initialize($config);
-				$this->email->from($config['smtp_user'], 'noreply');
-				$this->email->to($email);
-				$this->email->subject("Reset Password");
-				$this->email->message("Klik link untuk reset password anda, <a href='" . site_url('auth/reset/?s=' . $encrypt . '&p=' . $new_password) . "'>Klik Disini</a>");
-				$email_sent = $this->email->send();
-				response('success', ['email_sent' => $email_sent], 200);
-			} catch (Exception $e) {
-				response('errors', $e->getMessage(), 422);
-			}
+		if (!$user) {
+			response('error', ['error' => 'Phone number not found'], 422);
 		} else {
-			response('errors', ['error' => 'email is not found'], 422);
-		}
-	}
-
-	public function reset()
-	{
-		if (isset($_GET['s']) && isset($_GET['p'])) {
-			$email = decrypt_url($_GET['s']);
-			$new_password = decrypt_url($_GET['p']);
-
-			$result = $this->db->get_where('users', ['email' => $email]);
-
-			if ($result->num_rows() > 0) {
-				try {
-					$this->db->update('users', ['password' => password_hash($new_password, PASSWORD_DEFAULT)], ['email' => $email]);
-					response('success', ['email' => $email, 'new_password' => $new_password], 200);
-				} catch (Exception $e) {
-					response('errors', $e->getMessage(), 422);
-				}
+			if (!$user->code) {
+				response('error', ['error' => 'Code number not found'], 422);
 			} else {
-				response('errors', ['error' => 'reset code is not valid'], 422);
+				if ($user->code === $code) {
+					try {
+						$this->db->update('users', ['is_verified' => 1, 'code' => null], ['id' => $user->id]);
+						response('success', ['is_verified' => true], 200);
+					} catch (Exception $e) {
+						response('errors', $e->getMessage(), 422);
+					}
+				} else {
+					response('error', ['error' => 'Code number is wrong'], 422);
+				}
 			}
-		} else {
-			response('errors', ['error' => 'reset code is not found'], 422);
-		}
-	}
-
-	public function verify()
-	{
-		if (isset($_GET['s'])) {
-			$id = decrypt_url($_GET['s']);
-			try {
-				$this->db->update('users', ['is_verified' => 1], ['id' => $id]);
-				response('success', ['id' => $id, 'is_verified' => true], 200);
-			} catch (Exception $e) {
-				response('errors', $e->getMessage(), 422);
-			}
-		} else {
-			response('errors', ['error' => 'reset code is not found'], 422);
 		}
 	}
 
@@ -165,6 +101,7 @@ class Auth extends CI_Controller
 				if (password_verify($password, $result->row()->password) === true) {
 					$data_session = [
 						'id' => $result->row()->id,
+						'role' => $result->row()->role,
 						'is_logged' => true,
 					];
 
