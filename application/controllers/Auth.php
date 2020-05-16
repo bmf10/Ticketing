@@ -11,7 +11,7 @@ class Auth extends CI_Controller
 
 	public function index()
 	{
-		//view code here
+		$this->template->load('/user/base', '/user/auth');
 	}
 
 	public function register()
@@ -110,7 +110,7 @@ class Auth extends CI_Controller
 				response('errors', $e->getMessage(), 422);
 			}
 		} else {
-			response('errors', ['error' => 'email is not found'], 404);
+			response('errors', ['error' => 'email is not found'], 422);
 		}
 	}
 
@@ -133,7 +133,7 @@ class Auth extends CI_Controller
 				response('errors', ['error' => 'reset code is not valid'], 422);
 			}
 		} else {
-			response('errors', ['error' => 'reset code is not found'], 404);
+			response('errors', ['error' => 'reset code is not found'], 422);
 		}
 	}
 
@@ -148,7 +148,7 @@ class Auth extends CI_Controller
 				response('errors', $e->getMessage(), 422);
 			}
 		} else {
-			response('errors', ['error' => 'reset code is not found'], 404);
+			response('errors', ['error' => 'reset code is not found'], 422);
 		}
 	}
 
@@ -160,7 +160,7 @@ class Auth extends CI_Controller
 			$result = $this->db->get_where('users', ['email' => $email]);
 
 			if ($result->num_rows() === 0) {
-				response('error', ['error' => 'Email not found'], 404);
+				response('error', ['error' => 'Email not found'], 422);
 			} else {
 				if (password_verify($password, $result->row()->password) === true) {
 					$data_session = [
