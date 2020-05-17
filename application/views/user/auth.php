@@ -61,7 +61,7 @@
 									</div>
 									<div class="form-group">
 										<label>Password</label>
-										<input type="password" name="password" class="form-control" placeholder="Password">
+										<input type="password" minlength="6" name="password" class="form-control" placeholder="Password">
 									</div>
 									<button type="submit" class="btn btn-primary my-2">Submit</button>
 								</form>
@@ -101,24 +101,6 @@
 <script>
 	$(document).ready(() => {
 		$('#auth').addClass('active')
-
-		toastr.options = {
-			"closeButton": false,
-			"debug": false,
-			"newestOnTop": false,
-			"progressBar": true,
-			"positionClass": "toast-top-right",
-			"preventDuplicates": false,
-			"onclick": null,
-			"showDuration": "300",
-			"hideDuration": "1000",
-			"timeOut": "5000",
-			"extendedTimeOut": "1000",
-			"showEasing": "swing",
-			"hideEasing": "linear",
-			"showMethod": "fadeIn",
-			"hideMethod": "fadeOut"
-		}
 
 		$('#login').submit((e) => {
 			e.preventDefault()

@@ -34,18 +34,51 @@
 						</li>
 						<li class="nav-item mx-0 mx-lg-1"><a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#contact">CONTACT</a>
 						</li>
-						<li class="nav-item mx-0 mx-lg-1"><a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="<?= base_url('/auth') ?>">LOGIN</a>
-						</li>
+						<?php if ($this->session->userdata('is_logged')) : ?>
+							<li class=" nav-item mx-0 mx-lg-1"><a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" id="auth" href="<?= base_url('/profile') ?>">PROFILE</a>
+							</li>
+							<li class=" nav-item mx-0 mx-lg-1"><a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" id="auth" href="<?= base_url('/profile/logout') ?>">LOGOUT</a>
+							</li>
+						<?php else : ?>
+							<li class=" nav-item mx-0 mx-lg-1"><a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" id="auth" href="<?= base_url('/auth') ?>">LOGIN</a>
+							</li>
+						<?php endif ?>
 					<?php else : ?>
 						<li class="nav-item mx-0 mx-lg-1"><a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="<?= base_url('/home') ?>">HOME</a>
 						</li>
-						<li class=" nav-item mx-0 mx-lg-1"><a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" id="auth" href="<?= base_url('/auth') ?>">LOGIN</a>
-						</li>
+						<?php if ($this->session->userdata('is_logged')) : ?>
+							<li class=" nav-item mx-0 mx-lg-1"><a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" id="profile_menu" href="<?= base_url('/profile') ?>">PROFILE</a>
+							</li>
+							<li class=" nav-item mx-0 mx-lg-1"><a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" id="auth" href="<?= base_url('/profile/logout') ?>">LOGOUT</a>
+							</li>
+						<?php else : ?>
+							<li class=" nav-item mx-0 mx-lg-1"><a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" id="auth" href="<?= base_url('/auth') ?>">LOGIN</a>
+							</li>
+						<?php endif ?>
 					<?php endif ?>
 				</ul>
 			</div>
 		</div>
 	</nav>
+	<script>
+		toastr.options = {
+			"closeButton": false,
+			"debug": false,
+			"newestOnTop": false,
+			"progressBar": true,
+			"positionClass": "toast-top-right",
+			"preventDuplicates": false,
+			"onclick": null,
+			"showDuration": "300",
+			"hideDuration": "1000",
+			"timeOut": "5000",
+			"extendedTimeOut": "1000",
+			"showEasing": "swing",
+			"hideEasing": "linear",
+			"showMethod": "fadeIn",
+			"hideMethod": "fadeOut"
+		}
+	</script>
 	<?= $contents; ?>
 	<!-- Copyright Section-->
 	<section class=" copyright py-4 text-center text-white">
