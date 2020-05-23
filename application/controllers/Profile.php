@@ -9,7 +9,7 @@ class Profile extends CI_Controller
 	function __construct()
 	{
 		parent::__construct();
-		is_logged_in(false, true);
+		is_user();
 	}
 
 	public function index()

@@ -9,7 +9,10 @@ class Auth extends CI_Controller
 	function __construct()
 	{
 		parent::__construct();
-		is_logged_in(true);
+		$is_login = $this->session->userdata('is_logged');
+		if ($is_login) {
+			redirect('profile');
+		}
 	}
 
 	public function index()
