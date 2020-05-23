@@ -6,6 +6,7 @@ class Home extends CI_Controller
 
 	public function index()
 	{
-		$this->template->load('/user/base', '/user/home');
+		$data['price'] = $this->db->get('ticket')->result();
+		$this->template->load('/user/base', '/user/home', $data);
 	}
 }
