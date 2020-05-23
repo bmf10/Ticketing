@@ -93,5 +93,6 @@
 	<!-- Core theme JS-->
 	<script src="<?= base_url('assets/') ?>js/scripts.js"></script>
 </body>
+<?= $this->session->flashdata('message') ?>
 
 </html>
