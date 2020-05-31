@@ -12,12 +12,18 @@ class Dashboard extends CI_Controller
 
 	public function index()
 	{
+		$id = $this->session->userdata('id');
+
 		$data['title'] = 'Dashboard';
+		$data['user'] = $this->db->get_where('users', ['id' => $id])->row();
 		$this->template->load('/admin/base', '/admin/dashboard', $data);
 	}
 
 	public function admin($id = '')
 	{
+		if ($this->session->userdata('role') != 3) {
+			redirect('admin');
+		}
 		if ($this->input->post()) {
 			if ($id == '') {
 				$this->form_validation->set_rules('phone', 'Phone', 'required|trim|is_unique[users.phone]');
@@ -42,12 +48,12 @@ class Dashboard extends CI_Controller
 				if ($user->email != $this->input->post('email')) {
 					$this->form_validation->set_rules('email', 'Email', 'required|valid_email|trim|is_unique[users.email]');
 				} else {
-					$this->form_validation->set_rules('phone', 'Phone', 'required');
+					$this->form_validation->set_rules('email', 'email', 'required');
 				}
 				if ($user->phone != $this->input->post('phone')) {
 					$this->form_validation->set_rules('phone', 'Phone', 'required|trim|is_unique[users.phone]');
 				} else {
-					$this->form_validation->set_rules('email', 'Email', 'required');
+					$this->form_validation->set_rules('phone', 'phone', 'required');
 				}
 
 				if ($this->form_validation->run() === FALSE) {
@@ -71,6 +77,42 @@ class Dashboard extends CI_Controller
 
 			$data['title'] = 'User Admin';
 			$this->template->load('/admin/base', '/admin/admin', $data);
+		}
+	}
+
+	public function profile()
+	{
+		$id = $this->session->userdata('id');
+		if ($this->input->post()) {
+			$user = $this->db->get_where('users', ['id' => $id])->row();
+
+			if ($user->email != $this->input->post('email')) {
+				$this->form_validation->set_rules('email', 'Email', 'required|valid_email|trim|is_unique[users.email]');
+			} else {
+				$this->form_validation->set_rules('email', 'email', 'required');
+			}
+
+			if ($user->phone != $this->input->post('phone')) {
+				$this->form_validation->set_rules('phone', 'Phone', 'required|trim|is_unique[users.phone]');
+			} else {
+				$this->form_validation->set_rules('phone', 'phone', 'required');
+			}
+
+			if ($this->form_validation->run() === FALSE) {
+				$data['user'] = $this->db->get_where('users', ['id' => $id])->row();
+				$data['title'] = 'Edit Profile';
+				$this->template->load('/admin/base', '/admin/profile', $data);
+			} else {
+				$post = $this->input->post();
+
+				$this->db->update('users', $post, ['id' => $id]);
+				$this->session->set_flashdata('message', "<script>$(document).ready(function() { toastr.success('Account updated successfull');});</script>");
+				redirect('admin');
+			}
+		} else {
+			$data['user'] = $this->db->get_where('users', ['id' => $id])->row();
+			$data['title'] = 'Edit Profile';
+			$this->template->load('/admin/base', '/admin/profile', $data);
 		}
 	}
 
