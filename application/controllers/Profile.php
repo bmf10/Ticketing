@@ -10,12 +10,14 @@ class Profile extends CI_Controller
 	{
 		parent::__construct();
 		is_user();
+		$this->load->model('M_profile', 'm_profile');
 	}
 
 	public function index()
 	{
 		$id = $this->session->userdata('id');
 		$data['profile'] = $this->db->get_where('users', ['id' => $id], 1)->row();
+		$data['transaction'] = $this->db->get_where('transaction', ['user_id' => $id])->result();
 		$this->template->load('/user/base', '/user/profile', $data);
 	}
 
@@ -91,9 +93,9 @@ class Profile extends CI_Controller
 
 	public function sendCode($phone, $condition, $code)
 	{
-		$account_sid = 'ACa419bc41f40a1008df27d0b1fa2a61b7';
-		$auth_token = '5bd38d039daf72b622c90caab40b5d27';
-		$twilio_number = "+12073674889";
+		$account_sid = $this->db->get_where('setting', ['alias' => 'twilio_account_sid'])->row()->value;
+		$auth_token = $this->db->get_where('setting', ['alias' => 'twilio_auth_token'])->row()->value;
+		$twilio_number = $this->db->get_where('setting', ['alias' => 'twilio_number'])->row()->value;
 		$phone_with_code = '+62' . substr($phone, 1);
 		$client = new Client($account_sid, $auth_token);
 
@@ -144,6 +146,16 @@ class Profile extends CI_Controller
 		} catch (Exception $e) {
 			response('errors', $e->getMessage(), 422);
 		}
+	}
+
+	public function get_transaction($id)
+	{
+		if ($id == '') {
+			response('error', 'not found', 404);
+		}
+
+		$transaction = $this->m_profile->getTransacton($id);
+		response('success', $transaction, '200');
 	}
 
 	public function logout()

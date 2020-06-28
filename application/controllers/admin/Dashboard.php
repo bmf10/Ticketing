@@ -8,6 +8,7 @@ class Dashboard extends CI_Controller
 	{
 		parent::__construct();
 		is_admin();
+		$this->load->model('M_dashboard', 'm_dash');
 	}
 
 	public function index()
@@ -16,6 +17,7 @@ class Dashboard extends CI_Controller
 
 		$data['title'] = 'Dashboard';
 		$data['user'] = $this->db->get_where('users', ['id' => $id])->row();
+		$data['transaction'] = $this->m_dash->getTransaction();
 		$this->template->load('/admin/base', '/admin/dashboard', $data);
 	}
 
@@ -120,5 +122,51 @@ class Dashboard extends CI_Controller
 	{
 		$this->session->sess_destroy();
 		redirect('admin/auth');
+	}
+
+	public function transaction($id = '')
+	{
+		if ($id == '') {
+			response('error', 'not found', 404);
+		}
+
+		$transaction = $this->m_dash->getDetail($id);
+		response('success', $transaction, '200');
+	}
+
+	public function executeTransaction($decision, $id)
+	{
+		if ($decision == 'Approve') {
+			$this->db->update('transaction', ['status' => 'Approved'], ['id' => $id]);
+
+			$tickets = $this->db->get_where('details_transaction', ['transaction_id' => $id])->result();
+			foreach ($tickets as $index => $t) {
+				$barcode = barcode_creator($id, $index);
+				$this->db->update('details_transaction', ['barcode_number' => $barcode], ['id' => $t->id]);
+			}
+		} else if ($decision == 'Reject') {
+			$this->db->update('transaction', ['status' => 'Rejected'], ['id' => $id]);
+		}
+
+		$this->session->set_flashdata('message', "<script>$(document).ready(function() { toastr.success('Update Successfully');});</script>");
+		redirect('admin');
+	}
+
+	public function ticket_checker()
+	{
+		$barcode_number = $this->input->post('barcode_number');
+		$tickets = $this->db->get_where('details_transaction', ['barcode_number' => $barcode_number]);
+
+		if ($tickets->num_rows() > 0) {
+			$ticket = $tickets->row();
+			if ($ticket->is_used == 1) {
+				response('error', ['error' => 'Barcode has been used'], 406);
+			} else {
+				$this->db->update('details_transaction', ['is_used' => 1], ['id' => $ticket->id]);
+				response('success', ['success' => 'Barcode verified'], 200);
+			}
+		} else {
+			response('error', ['error' => 'Barcode invalid'], 404);
+		}
 	}
 }

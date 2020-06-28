@@ -49,11 +49,11 @@ class Auth extends CI_Controller
 		}
 	}
 
-	public function sendCode($phone, $codition, $code)
+	private function sendCode($phone, $codition, $code)
 	{
-		$account_sid = 'ACa419bc41f40a1008df27d0b1fa2a61b7';
-		$auth_token = '5bd38d039daf72b622c90caab40b5d27';
-		$twilio_number = "+12073674889";
+		$account_sid = $this->db->get_where('setting', ['alias' => 'twilio_account_sid'])->row()->value;
+		$auth_token = $this->db->get_where('setting', ['alias' => 'twilio_auth_token'])->row()->value;
+		$twilio_number = $this->db->get_where('setting', ['alias' => 'twilio_number'])->row()->value;
 		$phone_with_code = '+62' . substr($phone, 1);
 		$client = new Client($account_sid, $auth_token);
 
@@ -112,7 +112,7 @@ class Auth extends CI_Controller
 
 					response('success', ['is_logged' => true], 200);
 				} else {
-					response('error', ['error' => 'Wrong password'], 200);
+					response('error', ['error' => 'Wrong password'], 401);
 				}
 			}
 		} catch (Exception $e) {

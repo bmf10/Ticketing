@@ -78,8 +78,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 		<aside class="main-sidebar sidebar-dark-primary elevation-4">
 			<a href="#" class="brand-link">
-				<img src="<?= base_url('assets/admin/') ?>dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-				<span class="brand-text font-weight-light">Simpetuk</span>
+				<span class="brand-text font-weight-light">Simpetuk v1.0</span>
 			</a>
 
 			<div class="sidebar">
@@ -111,6 +110,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
 							</a>
 						</li>
 						<li class="nav-item">
+							<a href="<?= base_url('admin/transaction') ?>" class="nav-link" id="transaction_menu">
+								<i class="nav-icon fas fa-money-check"></i>
+								<p>
+									Transaction
+								</p>
+							</a>
+						</li>
+						<li class="nav-item">
 							<a href="<?= base_url('admin/ticket') ?>" class="nav-link" id="ticket_menu">
 								<i class="nav-icon fas fa-ticket-alt"></i>
 								<p>
@@ -118,6 +125,16 @@ scratch. This page gets rid of all links and provides the needed markup only.
 								</p>
 							</a>
 						</li>
+						<?php if ($this->session->userdata('role') == 3) : ?>
+							<li class="nav-item">
+								<a href="<?= base_url('admin/setting') ?>" class="nav-link" id="setting_menu">
+									<i class="nav-icon fas fa-cog"></i>
+									<p>
+										Setting
+									</p>
+								</a>
+							</li>
+						<?php endif ?>
 						<li class="nav-item">
 							<a href="<?= base_url('admin/dashboard/logout') ?>" class="nav-link">
 								<i class="nav-icon fas fa-sign-out-alt"></i>
@@ -159,10 +176,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
 		</div>
 
 		<footer class="main-footer">
-			<div class="float-right d-none d-sm-inline">
-				Anything you want
-			</div>
-			<strong>Copyright &copy; 2014-2019 <a href="https://adminlte.io">AdminLTE.io</a>.</strong> All rights reserved.
+			<strong>Copyright &copy; 2020 <a href="<?= base_url() ?>">Simpetuk</a>.</strong> All rights reserved.
 		</footer>
 	</div>
 </body>

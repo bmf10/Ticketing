@@ -34,7 +34,7 @@
 									</div>
 									<div class="form-group" id="phone_group">
 										<label>Phone</label>
-										<input type="tel" id="phone" pattern="^\d{10}$|^\d{11}$|^\d{12}$|^\d{13}$" class="form-control" name="phone" required placeholder="Enter phone">
+										<input type="tel" id="phone" pattern="^[0]{1}[8]{1}[0-9]{9}$|^[0]{1}[8]{1}[0-9]{10}$|^[0]{1}[8]{1}[0-9]{11}$|^[0]{1}[8]{1}[0-9]{12}$" class="form-control" name="phone" required placeholder="Enter phone">
 									</div>
 									<div class="form-group" id="email_group">
 										<label>Email address</label>
@@ -111,7 +111,6 @@
 				url: url,
 				data: value,
 				success: response => {
-					let responseData = response.responseJSON
 					toastr.success('Redirecting...')
 					setTimeout(() => {
 						window.location.href = "<?= $this->session->userdata('current_url') ? $this->session->userdata('current_url') : base_url('profile') ?>"

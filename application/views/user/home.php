@@ -25,9 +25,8 @@
 			<div class="divider-custom-icon"><i class="fas fa-star"></i></div>
 			<div class="divider-custom-line"></div>
 		</div>
-		<!-- Portfolio Grid Items-->
 		<div class="row justify-content-center">
-			<div class="col-md-8">
+			<div class="col-md-8 text-center">
 				<div class="card">
 					<table class="table table-striped table-hover">
 						<thead>
@@ -44,6 +43,8 @@
 						</tbody>
 					</table>
 				</div>
+				<br>
+				<a href="<?= base_url('order') ?>" class="btn btn-xl btn-primary">Order Now</a>
 			</div>
 		</div>
 	</div>
