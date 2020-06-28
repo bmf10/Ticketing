@@ -1,6 +1,6 @@
 # Ticketing
 
-## Instalation
+## Installation
 - Clone or Download
 - If download copy to Xampp/htdocs/ or anything else
 - Import DB in database folder
